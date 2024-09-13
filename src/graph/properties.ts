@@ -1,6 +1,8 @@
+
+export type PropertiesMap = Record<string, any>;
 export abstract class Properties {
 
-    private properties: Record<string, any> = {}
+    private properties: PropertiesMap = {}
 
     public getProperty(key: string) {
         return this.properties[key];
@@ -10,13 +12,11 @@ export abstract class Properties {
         this.properties[key] = value
     }
 
-    public getKeys(): string[] {
-        return Object.keys(this.properties);
-    }
-
-
-    setProperties(props: Record<string, any>) {
+    public setProperties(props: PropertiesMap) {
         this.properties = props;
     }
 
+    public getKeys(): string[] {
+        return Object.keys(this.properties);
+    }
 }

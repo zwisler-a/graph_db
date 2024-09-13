@@ -1,7 +1,6 @@
 import {GraphStore} from "../store/graph-store";
 import {GraphQuery} from "./query";
-import {QueryNode} from "./query-node";
-import {Node} from "../graph/node";
+import {Graph} from "../graph/graph";
 
 export class QueryService {
 
@@ -15,29 +14,16 @@ export class QueryService {
     }
 
 
-    public query(query: GraphQuery): boolean {
-        const graph = this.graphStore.graph;
-        for (let queryNode of query.matchPatternGraph.nodes) {
-            for (const node of graph.nodes) {
-                const matching = this.deathFirstSearch(queryNode, node)
-                if (matching) return true;
-            }
+    public query(query: GraphQuery): Graph[] {
+        if (query.patternMatchingStrategy) {
+            return query.patternMatchingStrategy.match(query, this.graphStore)
         }
-
-        return false;
     }
 
-
-    private deathFirstSearch(currentQueryNode: QueryNode, currentNode: Node): boolean {
-        if (currentQueryNode.matches(currentNode)) {
-            for (const edge of currentQueryNode.outgoingEdges) {
-                const foundEdge = edge.find(currentNode.outgoingEdges);
-                if (!foundEdge) return false;
-                return this.deathFirstSearch(edge.to, foundEdge.to)
-            }
-            return true;
+    public contains(query: GraphQuery): boolean {
+        if (query.patternMatchingStrategy) {
+            return query.patternMatchingStrategy.contains(query, this.graphStore)
         }
-        return false;
     }
 
 }
