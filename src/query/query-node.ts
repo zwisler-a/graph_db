@@ -1,9 +1,10 @@
 import {Node} from "../graph/node";
 import {Properties} from "../graph/properties";
-import {Edge} from "../graph/edge";
 import {QueryEdge} from "./query-edge";
 
 export class QueryNode extends Properties {
+
+    variableName: string;
 
     constructor(
         public incomingEdges: QueryEdge[],

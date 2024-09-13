@@ -1,8 +1,11 @@
-import {QueryGraph} from "./query-graph";
+import {MatchPatternGraph} from "./match-pattern-graph";
 
 export class GraphQuery {
 
-    constructor(public graph: QueryGraph) {
+    constructor(
+        public matchPatternGraph: MatchPatternGraph,
+        public createPatternGraph:
+    ) {
     }
 
 }

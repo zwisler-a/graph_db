@@ -14,4 +14,9 @@ export abstract class Properties {
         return Object.keys(this.properties);
     }
 
+
+    setProperties(props: Record<string, any>) {
+        this.properties = props;
+    }
+
 }

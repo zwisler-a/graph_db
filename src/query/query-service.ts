@@ -17,7 +17,7 @@ export class QueryService {
 
     public query(query: GraphQuery): boolean {
         const graph = this.graphStore.graph;
-        for (let queryNode of query.graph.nodes) {
+        for (let queryNode of query.matchPatternGraph.nodes) {
             for (const node of graph.nodes) {
                 const matching = this.deathFirstSearch(queryNode, node)
                 if (matching) return true;
