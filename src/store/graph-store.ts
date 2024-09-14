@@ -1,14 +1,15 @@
-import {Graph} from "../graph/graph";
+import {Node} from "../graph/node";
+import {Edge} from "../graph/edge";
 
-export class GraphStore {
+export interface GraphStore<N = Node, E = Edge> {
+    addNode(node: N);
 
-    private constructor(
-        public graph: Graph
-    ) {
-    }
+    addEdge(node: E);
 
-    public static from(graph: Graph) {
-        return new GraphStore(graph);
-    }
+    getNodes(): Node[];
+
+    getOutgoingEdges(node: N): E[];
+
+    getIncomingEdges(node: N): E[];
 
 }

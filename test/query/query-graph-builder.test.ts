@@ -1,10 +1,10 @@
 import {describe, expect, test} from '@jest/globals';
-import {QueryBuilder} from "../../src/query/query-graph-builder";
+import {MatchingPatternBuilder} from "../../src/query/query-graph-builder";
 
 describe('Query graph builder', () => {
     test('contains correct number of edges and nodes', () => {
 
-        const query = QueryBuilder.with()
+        const query = MatchingPatternBuilder.with()
             .addNode({})
             .addEdge({})
             .addNode({})

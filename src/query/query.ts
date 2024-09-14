@@ -1,16 +1,17 @@
-import {QueryStrategy} from "./strategies/query-strategy";
-import {NaiveQueryStrategy} from "./strategies/query-strategy-native";
+import {PatternMatchingStrategy} from "./pattern-matching/strategies/pattern-matching-strategy";
+import {NaivePatternMatchingStrategy} from "./pattern-matching/strategies/query-strategy-native";
 
 
-import {MatchPatternGraph} from "./match-pattern-graph";
+import {PatternMatchingGraph} from "./pattern-matching/pattern-matching-graph/pattern-matching-graph";
+import {CreateGraph} from "./create-graph/create-graph";
 
 export class GraphQuery {
 
-    patternMatchingStrategy: QueryStrategy = new NaiveQueryStrategy();
+    patternMatchingStrategy: PatternMatchingStrategy = new NaivePatternMatchingStrategy();
 
     constructor(
-        public matchPatternGraph?: MatchPatternGraph,
-        public createPatternGraph?: any
+        public matchPatternGraph?: PatternMatchingGraph,
+        public createPatternGraph?: CreateGraph
     ) {
 
     }

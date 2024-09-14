@@ -1,34 +1,34 @@
-import {QueryGraph} from "./query-graph";
-import {QueryNode} from "./query-node";
-import {QueryEdge} from "./query-edge";
+
+import {PatternMatchingNode} from "./pattern-matching/pattern-matching-graph/pattern-matching-node";
+import {PatternMatchingEdge} from "./pattern-matching/pattern-matching-graph/pattern-matching-edge";
 import {GraphQuery} from "./query";
+import {PatternMatchingGraph} from "./pattern-matching/pattern-matching-graph/pattern-matching-graph";
 
-export class QueryBuilder {
-    private queryGraph: QueryGraph = new QueryGraph([], []);
+export class MatchingPatternBuilder {
+    private matchPatternGraph: PatternMatchingGraph = new PatternMatchingGraph([], []);
 
-    private currentNode: QueryNode | null;
-    private currentEdge: QueryEdge | null;
+    private currentNode: PatternMatchingNode | null;
+    private currentEdge: PatternMatchingEdge | null;
 
-    public static with(): QueryBuilder {
-        return new QueryBuilder();
+    public static with(): MatchingPatternBuilder {
+        return new MatchingPatternBuilder();
     }
 
-    public addNode(attributes: Record<string, string>): QueryBuilder {
-        this.currentNode = new QueryNode([], []);
+    public addNode(attributes: Record<string, string>): MatchingPatternBuilder {
+        this.currentNode = new PatternMatchingNode();
         if (this.currentEdge) {
-            this.currentNode.incomingEdges.push(this.currentEdge);
             this.currentEdge.to = this.currentNode;
-            this.queryGraph.edges.push(this.currentEdge);
+            this.matchPatternGraph.edges.push(this.currentEdge);
             this.currentEdge = null;
         }
         this.currentNode.setProperties(attributes);
-        this.queryGraph.nodes.push(this.currentNode);
+        this.matchPatternGraph.nodes.push(this.currentNode);
         return this;
     }
 
-    public addEdge(attributes: Record<string, string>): QueryBuilder {
+    public addEdge(attributes: Record<string, string>): MatchingPatternBuilder {
         if (!this.currentNode) throw new Error('No currentNode set! Can\'t start query with an edge...')
-        this.currentEdge = new QueryEdge(this.currentNode, null);
+        this.currentEdge = new PatternMatchingEdge(this.currentNode, null);
         this.currentNode = null;
         this.currentEdge.setProperties(attributes);
         return this;
@@ -38,6 +38,6 @@ export class QueryBuilder {
     build(): GraphQuery {
         if (this.currentEdge) throw new Error('No currentNode set! Can\'t terminate query with an edge...')
         if (this.currentEdge) throw new Error('No currentNode set! Can\'t terminate query with an edge...')
-        return new GraphQuery(this.queryGraph);
+        return new GraphQuery(this.matchPatternGraph);
     }
 }
