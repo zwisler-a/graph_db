@@ -2,6 +2,7 @@ import {Graph} from "../graph/graph";
 import {GraphStore} from "./graph-store";
 import {Node} from "../graph/node";
 import {Edge} from "../graph/edge";
+import {logger} from "../util/logger";
 
 export class InMemoryGraphStore implements GraphStore {
 
@@ -16,11 +17,13 @@ export class InMemoryGraphStore implements GraphStore {
 
     addNode(node: Node) {
         if (!this.graph.nodes.includes(node))
+            logger.debug(`Node ${node.toString()} added to graph store`);
             this.graph.nodes.push(node);
     }
 
     addEdge(edge: Edge) {
         if (!this.graph.edges.includes(edge))
+            logger.debug(`Edge ${edge} added to graph store`);
             this.graph.edges.push(edge);
     }
 

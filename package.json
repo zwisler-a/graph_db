@@ -5,14 +5,23 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "ui": "electron ./src/ui/main.js",
+    "generate": "antlr-ng -Dlanguage=TypeScript -l -v -o generated GQL.g4 "
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "antlr-ng": "^1.0.4",
+    "antlr4ng": "^3.0.15",
+    "winston": "^3.17.0"
   }
 }

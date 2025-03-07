@@ -4,4 +4,7 @@ import {Graph} from "../../../graph/graph";
 
 export class PatternMatchingGraph extends Graph<PatternMatchingNode, PatternMatchingEdge> {
 
+    static from(graph: Graph<PatternMatchingNode, PatternMatchingEdge>): PatternMatchingGraph {
+        return new PatternMatchingGraph(graph.nodes, graph.edges);
+    }
 }

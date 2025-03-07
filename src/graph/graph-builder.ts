@@ -7,7 +7,7 @@ import {Edge} from "./edge";
 export class EdgeBuilder {
     public nodeBuilder: NodeBuilder | undefined;
 
-    constructor(private props: PropertiesMap, private parent: NodeBuilder) {
+    constructor(public props?: PropertiesMap, private parent?: NodeBuilder, public label?: string) {
     }
 
     createNode(props?: PropertiesMap) {
@@ -20,11 +20,11 @@ export class EdgeBuilder {
 export class NodeBuilder {
     private edges: EdgeBuilder[] = [];
 
-    constructor(private props: PropertiesMap, private parent: NodeBuilder) {
+    constructor(private props?: PropertiesMap, private parent?: NodeBuilder) {
     }
 
-    createEdge(props?: PropertiesMap) {
-        const builder = new EdgeBuilder(props, this);
+    createEdge(label?: string, props?: PropertiesMap) {
+        const builder = new EdgeBuilder(props, this, label);
         this.edges.push(builder);
         return builder;
     }
@@ -37,26 +37,44 @@ export class NodeBuilder {
     }
 
     build(): Graph {
-        const nodes: Node[] = [];
+        const graphNodes: Node[] = [];
+        const graphEdges: Edge[] = [];
 
-        const rootNode = new Node();
-        rootNode.setProperties(this.props);
-        nodes.push(rootNode);
 
-        let currentNodeBuilder = this;
-        while (true) {
+        const createNode = (nodeBuilder?: NodeBuilder) => {
+            if (!nodeBuilder) return;
             const currentNode = new Node();
-            currentNode.setProperties(currentNodeBuilder.props);
-            currentNodeBuilder.edges.map(edgeBuilder => new Edge(currentNode, null))
+            currentNode.setProperties(nodeBuilder.props);
+            const edges = nodeBuilder.edges.map(edgeBuilder => {
+                const edge = new Edge(currentNode, createNode(edgeBuilder.nodeBuilder)!, edgeBuilder.props, edgeBuilder.label)
+                edge.setProperties(edgeBuilder.props)
+                return edge;
+            });
+            graphEdges.push(...edges);
+            graphNodes.push(currentNode);
+            return currentNode;
         }
-
+        createNode(this);
+        return new Graph(graphNodes, graphEdges);
     }
 
 }
 
 
 export class GraphBuilder {
+
     public static startNode(props?: PropertiesMap) {
-        return new NodeBuilder(props, null);
+        return new NodeBuilder(props);
+    }
+
+    private rootNodeBuilder?: NodeBuilder;
+
+    public createNode(props?: PropertiesMap) {
+        this.rootNodeBuilder = new NodeBuilder(props);
+        return this.rootNodeBuilder;
+    }
+
+    public build(): Graph {
+        return this.rootNodeBuilder!.build();
     }
 }

@@ -6,6 +6,7 @@ import {GraphStore} from "../../../store/graph-store";
 import {PatternMatchingResult} from "../pattern-matching-result";
 import {PatternMatchingEdge} from "../pattern-matching-graph/pattern-matching-edge";
 import {Edge} from "../../../graph/edge";
+import {logger} from "../../../util/logger";
 
 /**
  * - Pick random starting point and build from there
@@ -14,8 +15,8 @@ export class NaivePatternMatchingStrategy implements PatternMatchingStrategy {
 
 
     match(query: GraphQuery, store: GraphStore): PatternMatchingResult[] {
-        if (query.matchPatternGraph.nodes.length === 0) return [];
-        const startMatchingNode = query.matchPatternGraph.nodes[0]
+        if ((query.matchPatternGraph?.nodes.length ?? 0) === 0) return [];
+        const startMatchingNode = query.matchPatternGraph!.nodes[0]
         const seedNodes = this.findMatchingNode(startMatchingNode, store.getNodes());
         const rootPath = new PatternMatchingResult();
         return seedNodes.flatMap(seedNode => {
@@ -27,14 +28,20 @@ export class NaivePatternMatchingStrategy implements PatternMatchingStrategy {
     private dfs(currentNode: Node, currentMatchingNode: PatternMatchingNode, currentPath: PatternMatchingResult, query: GraphQuery, store: GraphStore): PatternMatchingResult[] {
         if (!currentMatchingNode.matches(currentNode)) return [];
         currentPath.addNode(currentNode, currentMatchingNode);
-        const matchingEdges = query.matchPatternGraph.getEdgesStartingAtNode(currentMatchingNode);
+        logger.debug(`Path: ${currentPath.toString()}`);
+        // Get all edges in contact with the current matching edge
+        const matchingEdges = query.matchPatternGraph!.getEdgesStartingAtNode(currentMatchingNode)
+            .concat(query.matchPatternGraph?.getEdgesEndingAtNode(currentMatchingNode) ?? []).filter(currentPath.filterVisitedMatchingEdge());
         if (matchingEdges.length == 0) return [currentPath];
-        const edges = store.getOutgoingEdges(currentNode);
+        // Get all edges from the current node
+        const edges = store.getOutgoingEdges(currentNode).concat(store.getIncomingEdges(currentNode)).filter(currentPath.filterVisitedEdge());
         return matchingEdges.flatMap(matchingEdge => {
-            const nextMatchingNode = matchingEdge.to;
+            // Next matching node is on the other side of the currentMatchingEdge
+            const nextMatchingNode = matchingEdge.to == currentMatchingNode ? matchingEdge.from: matchingEdge.to;
             const matchedEdges = this.findMatchingEdge(matchingEdge, edges);
             return matchedEdges.flatMap(matchedEdge => {
-                const nextNode = matchedEdge.to;
+                // Next Node is on the other side of the current edge
+                const nextNode = matchedEdge.to == currentNode ? matchedEdge.from: matchedEdge.to;
                 currentPath.addEdge(matchedEdge, matchingEdge);
                 return this.dfs(nextNode, nextMatchingNode, currentPath.fork(), query, store);
             })

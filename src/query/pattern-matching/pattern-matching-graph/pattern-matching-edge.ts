@@ -7,10 +7,6 @@ export class PatternMatchingEdge extends Edge<PatternMatchingNode> {
         for (const key of this.getKeys()) {
             if (other.getProperty(key) !== this.getProperty(key)) return false;
         }
-        return true;
-    }
-
-    find(others: Edge[]) {
-        return others.find(o => this.matches(o))
+        return this.to.matches(other.to) && this.from.matches(other.from);
     }
 }

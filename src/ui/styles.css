@@ -1,0 +1,58 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.tab-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#tab-bar {
+    display: flex;
+    background-color: #333;
+    padding: 10px;
+}
+
+.tab-button {
+    color: white;
+    padding: 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    background-color: #444;
+    border-radius: 5px;
+}
+
+.tab-button.active {
+    background-color: #666;
+}
+
+.close-tab {
+    margin-left: 5px;
+    color: red;
+    cursor: pointer;
+}
+
+#tab-content {
+    flex: 1;
+    padding: 10px;
+}
+
+.tab-panel {
+    height: 100%;
+}
+
+input {
+    margin-right: 5px;
+}
+
+.editor-container {
+    width: 100%;
+    display: flex;
+    flex: 1 1 auto;
+}
+.editor-container textarea {
+    flex: 1 1 auto;
+}

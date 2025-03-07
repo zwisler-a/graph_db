@@ -3,11 +3,16 @@ import {generateUUID, UUID} from "../util/uuid";
 
 export class Node extends Properties {
 
-    public label?: string[];
+    public label?: string;
 
     constructor(
         public readonly id: UUID = generateUUID()
     ) {
         super();
+    }
+
+
+    toString(): string {
+        return `Node{${this.id}:${JSON.stringify(this.getProperties())}}`;
     }
 }

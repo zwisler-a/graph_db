@@ -15,4 +15,8 @@ export class GraphQuery {
     ) {
 
     }
+
+    toString(): string {
+        return `GraphQuery{ matchPatternGraph: ${this.matchPatternGraph?.toString()}, createPatternGraph: ${this.createPatternGraph?.toString()} }`;
+    }
 }

@@ -1,6 +1,18 @@
+import {Graph} from "../graph/graph";
+
 export class QueryResult {
+    public readonly graph: Graph;
+
     constructor(
-        public rawRows: any[]
+        public rawRows: Graph[]
     ) {
+        this.graph = rawRows.reduce((previousValue, currentValue) => {
+            return previousValue.union(currentValue);
+        }, new Graph());
+
+    }
+
+    toString() {
+        return this.rawRows.map(row => row.toString()).join('\n');
     }
 }
