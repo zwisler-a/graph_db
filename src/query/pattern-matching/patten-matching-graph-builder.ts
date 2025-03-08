@@ -7,6 +7,7 @@ import {PatternMatchingGraph} from "./pattern-matching-graph/pattern-matching-gr
 
 export class PatternMatchingEdgeBuilder {
     public direction!: ">" | "<" | "-";
+    public label?: string;
 
     constructor(public props?: PropertiesMap, public readonly parent?: PatternMatchingNodeBuilder) {
     }
@@ -17,15 +18,15 @@ export class PatternMatchingEdgeBuilder {
 
     createEdges(left: PatternMatchingNode, right: PatternMatchingNode): PatternMatchingEdge[] {
         if (this.direction == '>') {
-            return [new PatternMatchingEdge(left, right, this.props)];
+            return [new PatternMatchingEdge(left, right, this.props, this.label)];
         }
         if (this.direction == '<') {
-            return [new PatternMatchingEdge(right, left, this.props)];
+            return [new PatternMatchingEdge(right, left, this.props, this.label)];
         }
         if (this.direction == '-') {
             return [
-                new PatternMatchingEdge(right, left, this.props),
-                new PatternMatchingEdge(left, right, this.props),
+                new PatternMatchingEdge(right, left, this.props, this.label),
+                new PatternMatchingEdge(left, right, this.props, this.label),
             ];
         }
         return []
@@ -33,6 +34,7 @@ export class PatternMatchingEdgeBuilder {
 }
 
 export class PatternMatchingNodeBuilder {
+    label?: string;
 
     constructor(
         private props?: PropertiesMap,
@@ -62,6 +64,7 @@ export class PatternMatchingNodeBuilder {
             const currentNode = new PatternMatchingNode();
             currentNode.setProperties(nodeBuilder.props ?? {});
             currentNode.alias = nodeBuilder.alias;
+            currentNode.label = nodeBuilder.label;
             const edgeBuilder = nodeBuilder.edge;
             if (edgeBuilder) {
                 const edges = edgeBuilder.createEdges(createNode(edgeBuilder.parent!)!, currentNode)

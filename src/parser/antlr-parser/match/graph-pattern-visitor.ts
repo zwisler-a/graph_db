@@ -1,7 +1,7 @@
 import {GQLVisitor} from "../../../../generated/GQLVisitor";
 import {
     EdgePatternContext,
-    GraphPatternBindingTableContext,
+    GraphPatternBindingTableContext, LabelNameContext,
     NodePatternContext,
     PathPatternListContext
 } from "../../../../generated/GQLParser";

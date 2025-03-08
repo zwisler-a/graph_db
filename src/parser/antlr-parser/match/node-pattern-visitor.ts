@@ -4,7 +4,7 @@ import {
     ElementPatternFillerContext,
     ElementPropertySpecificationContext,
     ElementVariableContext,
-    ElementVariableDeclarationContext,
+    ElementVariableDeclarationContext, LabelNameContext,
     NodePatternContext
 } from "../../../../generated/GQLParser";
 import {PatternMatchingNodeBuilder} from "../../../query/pattern-matching/patten-matching-graph-builder";
@@ -46,5 +46,9 @@ export class NodePatternVisitor extends GQLVisitor<PatternMatchingNodeBuilder| n
         return null;
     }
 
+    visitLabelName = (ctx: LabelNameContext) => {
+        this.nodeBuilder.label = ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText();
+        return this.visitChildren(ctx);
+    }
 
 }

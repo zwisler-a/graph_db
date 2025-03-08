@@ -46,6 +46,34 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
         return new Graph<N, E>(nodes, edges);
     }
 
+    private dfs(node: Node, visited: Set<Node>, component: Node[]): void {
+        visited.add(node);
+        component.push(node);
+
+        for (const edge of this.edges) {
+            if (edge.from === node && !visited.has(edge.to)) {
+                this.dfs(edge.to, visited, component);
+            }
+            if (edge.to === node && !visited.has(edge.from)) {
+                this.dfs(edge.from, visited, component);
+            }
+        }
+    }
+
+    getComponents(): N[][] {
+        const visited = new Set<N>();
+        const components: N[][] = [];
+
+        for (const node of this.nodes) {
+            if (!visited.has(node)) {
+                const component: N[] = [];
+                this.dfs(node, visited, component);
+                components.push(component);
+            }
+        }
+        return components;
+    }
+
 
     toString() {
         return `${this.nodes.length} nodes ${this.edges.length} edges`;

@@ -29,15 +29,11 @@ export class QueryService {
         const rows: Graph[] = [];
 
         if (matchingResult.length == 0) this.createEdgesAndNodes(query, new AliasStore());
-
+        const aliasStore = new AliasStore();
+        matchingResult.forEach(matchingResult => aliasStore.insert(matchingResult))
         matchingResult.forEach(matchingResult => {
-            const aliasStore = new AliasStore();
-            aliasStore.insert(matchingResult);
             rows.push(this.mapToResult(matchingResult, aliasStore, query));
-
-
             this.createEdgesAndNodes(query, aliasStore);
-
         })
 
 

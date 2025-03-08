@@ -31,27 +31,28 @@ export class PropertyVisitor extends GQLVisitor<Record<string, any> | null> {
     }
 
     visitCharacterStringLiteral = (ctx: CharacterStringLiteralContext) => {
-        this.currentValue = ctx.DOUBLE_QUOTED_CHARACTER_SEQUENCE()?.getText() ?? ctx.SINGLE_QUOTED_CHARACTER_SEQUENCE()?.getText();
+        const val: string = ctx.DOUBLE_QUOTED_CHARACTER_SEQUENCE()?.getText() ?? ctx.SINGLE_QUOTED_CHARACTER_SEQUENCE()?.getText() ?? '';
+        this.currentValue = val.replace(/"/g, "").replace(/'/g, "");
         return this.visitChildren(ctx);
     }
 
     visitUnsignedInteger = (ctx: UnsignedIntegerContext) => {
         const textInt = ctx.UNSIGNED_DECIMAL_INTEGER()?.getText();
-        if(!textInt) return this.visitChildren(ctx);
+        if (!textInt) return this.visitChildren(ctx);
         this.currentValue = Number.parseInt(textInt);
         return this.visitChildren(ctx);
     }
 
     visitExactNumericLiteral = (ctx: ExactNumericLiteralContext) => {
-        if(ctx.unsignedInteger()) {
+        if (ctx.unsignedInteger()) {
             const textInt = ctx.unsignedInteger()?.UNSIGNED_DECIMAL_INTEGER()?.getText();
-            if(!textInt) return this.visitChildren(ctx);
+            if (!textInt) return this.visitChildren(ctx);
             this.currentValue = Number.parseInt(textInt);
             return this.visitChildren(ctx);
         }
-        if(ctx.UNSIGNED_DECIMAL_IN_COMMON_NOTATION_WITHOUT_SUFFIX()) {
+        if (ctx.UNSIGNED_DECIMAL_IN_COMMON_NOTATION_WITHOUT_SUFFIX()) {
             const textFloat = ctx.UNSIGNED_DECIMAL_IN_COMMON_NOTATION_WITHOUT_SUFFIX()?.getText();
-            if(!textFloat) return this.visitChildren(ctx);
+            if (!textFloat) return this.visitChildren(ctx);
             this.currentValue = Number.parseFloat(textFloat);
             return this.visitChildren(ctx);
         }

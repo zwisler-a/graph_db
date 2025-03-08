@@ -1,14 +1,17 @@
-import {Properties} from "./properties";
+import {Properties, PropertiesMap} from "./properties";
 import {generateUUID, UUID} from "../util/uuid";
 
 export class Node extends Properties {
 
-    public label?: string;
+
 
     constructor(
-        public readonly id: UUID = generateUUID()
+        public readonly id: UUID = generateUUID(),
+        public label?: string,
+        props?: PropertiesMap
     ) {
         super();
+        this.setProperties(props);
     }
 
 

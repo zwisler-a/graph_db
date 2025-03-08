@@ -16,11 +16,18 @@ export class NaivePatternMatchingStrategy implements PatternMatchingStrategy {
 
     match(query: GraphQuery, store: GraphStore): PatternMatchingResult[] {
         if ((query.matchPatternGraph?.nodes.length ?? 0) === 0) return [];
-        const startMatchingNode = query.matchPatternGraph!.nodes[0]
-        const seedNodes = this.findMatchingNode(startMatchingNode, store.getNodes());
+        const startMatchingNodes = query.matchPatternGraph!
+            .getComponents().map(component => component[0])
+        const seedNodes = startMatchingNodes
+            .map(startMatchingNode => ({
+                seedNodes: this.findMatchingNode(startMatchingNode, store.getNodes()),
+                startMatchingNode,
+            }));
         const rootPath = new PatternMatchingResult();
-        return seedNodes.flatMap(seedNode => {
-            return this.dfs(seedNode, startMatchingNode, rootPath.fork(), query, store);
+        return seedNodes.flatMap(({seedNodes, startMatchingNode}) => {
+            return seedNodes.flatMap(seedNode => {
+                return this.dfs(seedNode, startMatchingNode, rootPath.fork(), query, store);
+            })
         });
     }
 
@@ -37,11 +44,11 @@ export class NaivePatternMatchingStrategy implements PatternMatchingStrategy {
         const edges = store.getOutgoingEdges(currentNode).concat(store.getIncomingEdges(currentNode)).filter(currentPath.filterVisitedEdge());
         return matchingEdges.flatMap(matchingEdge => {
             // Next matching node is on the other side of the currentMatchingEdge
-            const nextMatchingNode = matchingEdge.to == currentMatchingNode ? matchingEdge.from: matchingEdge.to;
+            const nextMatchingNode = matchingEdge.to == currentMatchingNode ? matchingEdge.from : matchingEdge.to;
             const matchedEdges = this.findMatchingEdge(matchingEdge, edges);
             return matchedEdges.flatMap(matchedEdge => {
                 // Next Node is on the other side of the current edge
-                const nextNode = matchedEdge.to == currentNode ? matchedEdge.from: matchedEdge.to;
+                const nextNode = matchedEdge.to == currentNode ? matchedEdge.from : matchedEdge.to;
                 currentPath.addEdge(matchedEdge, matchingEdge);
                 return this.dfs(nextNode, nextMatchingNode, currentPath.fork(), query, store);
             })

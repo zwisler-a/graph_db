@@ -2,7 +2,7 @@ import {GQLVisitor} from "../../../../generated/GQLVisitor";
 import {
     AbbreviatedEdgePatternContext,
     EdgePatternContext,
-    FullEdgePatternContext
+    FullEdgePatternContext, LabelNameContext
 } from "../../../../generated/GQLParser";
 import {PatternMatchingEdgeBuilder} from "../../../query/pattern-matching/patten-matching-graph-builder";
 
@@ -13,12 +13,8 @@ export class EdgePatternVisitor extends GQLVisitor<any> {
     }
 
     visitEdgePattern = (ctx: EdgePatternContext) => {
-        if (ctx.abbreviatedEdgePattern()) {
-            return this.visit(ctx.abbreviatedEdgePattern()!)
-        }
-        if (ctx.fullEdgePattern()) {
-            return this.visit(ctx.fullEdgePattern()!)
-        }
+
+        return this.visitChildren(ctx);
     }
 
     visitFullEdgePattern = (ctx: FullEdgePatternContext) => {
@@ -31,7 +27,7 @@ export class EdgePatternVisitor extends GQLVisitor<any> {
         if (ctx.fullEdgeAnyDirection()) {
             this.edgePatternBuilder.direction = "-";
         }
-        return null;
+        return this.visitChildren(ctx);
     }
 
     visitAbbreviatedEdgePattern = (ctx: AbbreviatedEdgePatternContext) => {
@@ -45,6 +41,11 @@ export class EdgePatternVisitor extends GQLVisitor<any> {
             this.edgePatternBuilder.direction = "<";
         }
         return null;
+    }
+
+    visitLabelName = (ctx: LabelNameContext) => {
+        this.edgePatternBuilder.label = ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText();
+        return this.visitChildren(ctx);
     }
 
 
