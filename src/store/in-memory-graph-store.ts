@@ -15,16 +15,20 @@ export class InMemoryGraphStore implements GraphStore {
         return new InMemoryGraphStore(graph);
     }
 
+    getGraph(): Graph {
+        return this.graph;
+    }
+
     addNode(node: Node) {
         if (!this.graph.nodes.includes(node))
             logger.debug(`Node ${node.toString()} added to graph store`);
-            this.graph.nodes.push(node);
+        this.graph.nodes.push(node);
     }
 
     addEdge(edge: Edge) {
         if (!this.graph.edges.includes(edge))
             logger.debug(`Edge ${edge} added to graph store`);
-            this.graph.edges.push(edge);
+        this.graph.edges.push(edge);
     }
 
     getNodes(): Node[] {
@@ -39,4 +43,11 @@ export class InMemoryGraphStore implements GraphStore {
         return this.graph.getEdgesStartingAtNode(node);
     }
 
+    removeNode(node: Node, detach: boolean): void {
+        this.graph.removeNode(node, detach);
+    }
+
+    removeEdge(edge: Edge) {
+        this.graph.removeEdge(edge);
+    }
 }

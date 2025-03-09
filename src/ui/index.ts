@@ -1,10 +1,10 @@
 import {app, BrowserWindow, ipcMain} from 'electron';
-import {GraphQLParser} from "../parser/antlr-parser/antlr-gql-parser";
+import {GraphQLParser} from "../parser/gql-parser";
 import {QueryService} from "../query/query-service";
 import {logger} from "../util/logger";
 import {QueryResult} from "../query/query-result";
 import {Graph} from "../graph/graph";
-import {JsonGraphStore} from "../store/json-graph-store";
+import {InMemoryGraphStore} from "../store/in-memory-graph-store";
 
 async function createWindow() {
     const win = new BrowserWindow({
@@ -32,12 +32,13 @@ app.on('activate', () => {
 const parser = new GraphQLParser();
 
 
-const graphStore = new JsonGraphStore(new Graph(), "./graph.json");
+// const graphStore = new JsonGraphStore(new Graph(), "./graph.json");
+const graphStore = InMemoryGraphStore.from(new Graph());
 const queryService = QueryService.from(graphStore)
 
 ipcMain.handle('get-graph-data', (event, args: string): QueryResult => {
     logger.info('Getting graph data for: ' + args);
-    if (args.toLowerCase() == 'all') return new QueryResult([graphStore.graph])
+    if (args.toLowerCase() == 'all') return new QueryResult([graphStore.getGraph()])
     try {
         const results = queryService.query(parser.parse(args));
         logger.info(`Returning ${results.toString()}`);
@@ -46,5 +47,4 @@ ipcMain.handle('get-graph-data', (event, args: string): QueryResult => {
         logger.error('Error getting graph data', error);
         return new QueryResult([], error);
     }
-
 });

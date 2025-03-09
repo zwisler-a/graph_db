@@ -38,7 +38,7 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
         for (const edge of edges) {
             const fromNode = nodeMap.get(edge.from.id);
             const toNode = nodeMap.get(edge.to.id);
-            if(!fromNode || !toNode) throw new Error('Could not find node');
+            if (!fromNode || !toNode) throw new Error('Could not find node');
             edge.to = toNode;
             edge.from = fromNode;
         }
@@ -77,5 +77,19 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
 
     toString() {
         return `${this.nodes.length} nodes ${this.edges.length} edges`;
+    }
+
+    removeNode(node: Node, detach: boolean) {
+        const newEdges = this.edges.filter(edge => edge.to.id !== node.id && edge.from.id !== node.id);
+        if (!detach && newEdges.length != this.edges.length) {
+            throw new Error(`Node is still contained in an edge.`);
+        }
+
+        this.nodes = this.nodes.filter(n => node.id !== n.id);
+        this.edges = newEdges;
+    }
+
+    removeEdge(edge: Edge) {
+        this.edges = this.edges.filter(edge => edge.id !== edge.id);
     }
 }

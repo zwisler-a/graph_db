@@ -1,4 +1,4 @@
-import {GraphQLParser} from "./parser/antlr-parser/antlr-gql-parser";
+import {GraphQLParser} from "./parser/gql-parser";
 import {InMemoryGraphStore} from "./store/in-memory-graph-store";
 import {QueryService} from "./query/query-service";
 import {GraphBuilder} from "./graph/graph-builder";

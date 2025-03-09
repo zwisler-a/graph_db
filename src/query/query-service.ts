@@ -3,8 +3,8 @@ import {Graph} from "../graph/graph";
 import {QueryResult} from "./query-result";
 import {GraphStore} from "../store/graph-store";
 import {Node} from "../graph/node";
-import {AliasStore} from "./alias-store";
-import {PatternMatchingResult} from "./pattern-matching/pattern-matching-result";
+import {VariableStore} from "./variable-store";
+import {MatchPatternResult} from "./match-pattern/match-pattern-result";
 import {Edge} from "../graph/edge";
 import {logger} from "../util/logger";
 
@@ -28,9 +28,14 @@ export class QueryService {
         })
         const rows: Graph[] = [];
 
-        if (matchingResult.length == 0) this.createEdgesAndNodes(query, new AliasStore());
-        const aliasStore = new AliasStore();
+        if (matchingResult.length == 0) this.createEdgesAndNodes(query, new VariableStore());
+        const aliasStore = new VariableStore();
         matchingResult.forEach(matchingResult => aliasStore.insert(matchingResult))
+
+        query.markedForDeletion?.forEach(toDelete => {
+            this.deleteNodeOrProperty(toDelete, query.detachDelete, aliasStore);
+        })
+
         matchingResult.forEach(matchingResult => {
             rows.push(this.mapToResult(matchingResult, aliasStore, query));
             this.createEdgesAndNodes(query, aliasStore);
@@ -41,28 +46,35 @@ export class QueryService {
     }
 
 
-    private createEdgesAndNodes(query: GraphQuery, aliasStore: AliasStore) {
+    private createEdgesAndNodes(query: GraphQuery, aliasStore: VariableStore) {
         if (!query.createPatternGraph) return;
         query.createPatternGraph.nodes.forEach(node => {
             if (node.alias) {
                 if (!aliasStore.has(node.alias)) {
                     aliasStore.add(node.alias, node);
-                    this.graphStore.addNode(node);
+                    this.graphStore.addNode(node.toNode());
                 }
             } else {
-                this.graphStore.addNode(node);
+                this.graphStore.addNode(node.toNode());
             }
         })
 
         query.createPatternGraph.edges.forEach(edge => {
-            const newEdge = new Edge<Node>(edge.from, edge.to, edge.getProperties(), edge.label);
-            if (edge.from.alias) newEdge.from = aliasStore.get(edge.from.alias);
-            if (edge.to.alias) newEdge.to = aliasStore.get(edge.to.alias);
-            this.graphStore.addEdge(newEdge);
+            let foundFrom = [edge.from];
+            if (edge.from.alias) foundFrom = aliasStore.get(edge.from.alias)
+            let foundTo = [edge.to];
+            if (edge.to.alias) foundTo = aliasStore.get(edge.to.alias)
+
+            foundFrom.forEach(fromNode => {
+                foundTo.forEach(toNode => {
+                    const newEdge = new Edge<Node>(fromNode, toNode, edge.getProperties(), edge.label);
+                    this.graphStore.addEdge(newEdge);
+                })
+            })
         })
     }
 
-    private mapToResult(match: PatternMatchingResult, aliasStore: AliasStore, query: GraphQuery) {
+    private mapToResult(match: MatchPatternResult, aliasStore: VariableStore, query: GraphQuery) {
         return new Graph(match.nodes.map(n => n.node), match.edges.map(e => e.edge))
     }
 
@@ -70,4 +82,22 @@ export class QueryService {
         return !!this.query(query);
     }
 
+    private deleteNodeOrProperty(toDelete: string, detach: boolean, aliasStore: VariableStore) {
+        const parts = toDelete.split(".");
+        if (parts.length > 1) {
+            throw new Error("Not yet supported")
+        }
+        const rootAlias = parts[0];
+        if (!aliasStore.has(rootAlias)) throw new Error("Variable not found");
+        const type = aliasStore.getType(rootAlias);
+        if (type == Node.name) {
+            const nodes = aliasStore.get<Node>(rootAlias);
+            nodes.forEach(node => this.graphStore.removeNode(node, detach));
+        }
+        if (type == Edge.name) {
+            const edges = aliasStore.get<Edge>(rootAlias);
+            edges.forEach(node => this.graphStore.removeEdge(node));
+        }
+
+    }
 }

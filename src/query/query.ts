@@ -1,17 +1,19 @@
-import {PatternMatchingStrategy} from "./pattern-matching/strategies/pattern-matching-strategy";
-import {NaivePatternMatchingStrategy} from "./pattern-matching/strategies/query-strategy-native";
+import {PatternMatchingStrategy} from "./match-pattern/strategies/pattern-matching-strategy";
+import {NaivePatternMatchingStrategy} from "./match-pattern/strategies/naive-pattern-matching-strategy";
 
 
-import {PatternMatchingGraph} from "./pattern-matching/pattern-matching-graph/pattern-matching-graph";
-import {CreateGraph} from "./create-graph/create-graph";
+import {MatchPatternGraph} from "./match-pattern/match-pattern-graph/match-pattern-graph";
+import {InsertPatternGraph} from "./insert-pattern-graph/insert-pattern-graph";
 
 export class GraphQuery {
 
     patternMatchingStrategy: PatternMatchingStrategy = new NaivePatternMatchingStrategy();
+    detachDelete = false;
 
     constructor(
-        public matchPatternGraph?: PatternMatchingGraph,
-        public createPatternGraph?: CreateGraph
+        public matchPatternGraph?: MatchPatternGraph,
+        public createPatternGraph?: InsertPatternGraph,
+        public markedForDeletion?: string[]
     ) {
 
     }

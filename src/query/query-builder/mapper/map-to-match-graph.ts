@@ -1,21 +1,21 @@
 import {ParseTree} from "../../../parser/domain/parse-tree";
 import {isMatchClauseNode} from "../../../parser/domain/clauses/match-clause-node";
-import {PatternMatchingNode} from "../../pattern-matching/pattern-matching-graph/pattern-matching-node";
+import {MatchPatternNode} from "../../match-pattern/match-pattern-graph/match-pattern-node";
 import {EdgePatternNode, isEdgePatternNode} from "../../../parser/domain/pattern/edge-pattern-node";
-import {PatternMatchingEdge} from "../../pattern-matching/pattern-matching-graph/pattern-matching-edge";
+import {MatchPatternEdge} from "../../match-pattern/match-pattern-graph/match-pattern-edge";
 import {isNodePatternNode, NodePatternNode} from "../../../parser/domain/pattern/node-pattern-node";
 import {findFirstInChildren} from "../util/find-first-in-children";
 import {isAliasNode} from "../../../parser/domain/variable/alias-node";
 import {isPropertiesNode} from "../../../parser/domain/property/properties-node";
 import {convertPropertyNodeToRecord} from "./map-to-property-record";
-import {PatternMatchingGraph} from "../../pattern-matching/pattern-matching-graph/pattern-matching-graph";
+import {MatchPatternGraph} from "../../match-pattern/match-pattern-graph/match-pattern-graph";
 
 export function createMatchPattern(parseTree: ParseTree) {
     const matchClause = findFirstInChildren(isMatchClauseNode, parseTree);
-    let previousNode: PatternMatchingNode | null = null;
+    let previousNode: MatchPatternNode | null = null;
     let currentEdge: EdgePatternNode | null = null;
-    const nodes: PatternMatchingNode[] = [];
-    const edges: PatternMatchingEdge[] = [];
+    const nodes: MatchPatternNode[] = [];
+    const edges: MatchPatternEdge[] = [];
     matchClause?.children?.forEach(child => {
         if (isNodePatternNode(child)) {
             const n = mapParserNodeToQueryNode(child);
@@ -30,11 +30,11 @@ export function createMatchPattern(parseTree: ParseTree) {
         }
     })
 
-    return new PatternMatchingGraph(nodes, edges);
+    return new MatchPatternGraph(nodes, edges);
 }
 
-function mapParserNodeToQueryNode(node: NodePatternNode): PatternMatchingNode {
-    const n = new PatternMatchingNode();
+function mapParserNodeToQueryNode(node: NodePatternNode): MatchPatternNode {
+    const n = new MatchPatternNode();
 
     const variableDefinition = findFirstInChildren(isAliasNode, node);
     if (variableDefinition && isAliasNode(variableDefinition)) {
@@ -50,8 +50,8 @@ function mapParserNodeToQueryNode(node: NodePatternNode): PatternMatchingNode {
     return n;
 }
 
-function mapParserEdgeToQueryEdge(edge: EdgePatternNode, from: PatternMatchingNode, to: PatternMatchingNode): PatternMatchingEdge {
-    const e = new PatternMatchingEdge(from, to);
+function mapParserEdgeToQueryEdge(edge: EdgePatternNode, from: MatchPatternNode, to: MatchPatternNode): MatchPatternEdge {
+    const e = new MatchPatternEdge(from, to);
 
     const propertyNode = findFirstInChildren(isPropertiesNode, edge);
     if (propertyNode) {

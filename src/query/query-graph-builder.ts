@@ -1,21 +1,21 @@
 
-import {PatternMatchingNode} from "./pattern-matching/pattern-matching-graph/pattern-matching-node";
-import {PatternMatchingEdge} from "./pattern-matching/pattern-matching-graph/pattern-matching-edge";
+import {MatchPatternNode} from "./match-pattern/match-pattern-graph/match-pattern-node";
+import {MatchPatternEdge} from "./match-pattern/match-pattern-graph/match-pattern-edge";
 import {GraphQuery} from "./query";
-import {PatternMatchingGraph} from "./pattern-matching/pattern-matching-graph/pattern-matching-graph";
+import {MatchPatternGraph} from "./match-pattern/match-pattern-graph/match-pattern-graph";
 
 export class MatchingPatternBuilder {
-    private matchPatternGraph: PatternMatchingGraph = new PatternMatchingGraph([], []);
+    private matchPatternGraph: MatchPatternGraph = new MatchPatternGraph([], []);
 
-    private currentNode: PatternMatchingNode | null;
-    private currentEdge: PatternMatchingEdge | null;
+    private currentNode: MatchPatternNode | null;
+    private currentEdge: MatchPatternEdge | null;
 
     public static with(): MatchingPatternBuilder {
         return new MatchingPatternBuilder();
     }
 
     public addNode(attributes: Record<string, string>): MatchingPatternBuilder {
-        this.currentNode = new PatternMatchingNode();
+        this.currentNode = new MatchPatternNode();
         if (this.currentEdge) {
             this.currentEdge.to = this.currentNode;
             this.matchPatternGraph.edges.push(this.currentEdge);
@@ -28,7 +28,7 @@ export class MatchingPatternBuilder {
 
     public addEdge(attributes: Record<string, string>): MatchingPatternBuilder {
         if (!this.currentNode) throw new Error('No currentNode set! Can\'t start query with an edge...')
-        this.currentEdge = new PatternMatchingEdge(this.currentNode, null);
+        this.currentEdge = new MatchPatternEdge(this.currentNode, null);
         this.currentNode = null;
         this.currentEdge.setProperties(attributes);
         return this;

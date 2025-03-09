@@ -14,6 +14,7 @@ export class JsonGraphStore implements GraphStore {
         this.retrieveState();
     }
 
+
     addNode(node: Node) {
         if (!this.graph.nodes.includes(node)) {
             logger.debug(`Node ${node.toString()} added to graph store`);
@@ -68,4 +69,17 @@ export class JsonGraphStore implements GraphStore {
         }
     }
 
+    removeNode(node: Node, detach: boolean): void {
+        this.graph.removeNode(node, detach);
+        this.saveState();
+    }
+
+    removeEdge(edge: Edge) {
+        this.graph.removeEdge(edge);
+        this.saveState();
+    }
+
+    getGraph(): Graph {
+        return this.graph;
+    }
 }

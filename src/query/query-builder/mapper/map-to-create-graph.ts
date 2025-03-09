@@ -2,11 +2,11 @@ import {ParseTree} from "../../../parser/domain/parse-tree";
 import {isCreateClauseNode} from "../../../parser/domain/clauses/create-clause-node";
 import {Node} from "../../../graph/node";
 import {EdgePatternNode, isEdgePatternNode} from "../../../parser/domain/pattern/edge-pattern-node";
-import {CreateNode} from "../../create-graph/create-node";
-import {CreateEdge} from "../../create-graph/create-edge";
+import {InsertPatternNode} from "../../insert-pattern-graph/insert-pattern-node";
+import {InsertPatternEdge} from "../../insert-pattern-graph/insert-pattern-edge";
 import {isNodePatternNode, NodePatternNode} from "../../../parser/domain/pattern/node-pattern-node";
 import {findFirstInChildren} from "../util/find-first-in-children";
-import {CreateGraph} from "../../create-graph/create-graph";
+import {InsertPatternGraph} from "../../insert-pattern-graph/insert-pattern-graph";
 import {isLabelExpression} from "../../../parser/domain/label/label-expression-node";
 import {isAliasNode} from "../../../parser/domain/variable/alias-node";
 import {isPropertiesNode} from "../../../parser/domain/property/properties-node";
@@ -16,8 +16,8 @@ export function createCreatePattern(parseTree: ParseTree) {
     const createClause = findFirstInChildren(isCreateClauseNode, parseTree);
     let previousNode: Node | null = null;
     let currentEdge: EdgePatternNode | null = null;
-    const nodes: CreateNode[] = [];
-    const edges: CreateEdge[] = [];
+    const nodes: InsertPatternNode[] = [];
+    const edges: InsertPatternEdge[] = [];
     createClause?.children?.forEach(child => {
         if (isNodePatternNode(child)) {
             const n = mapParserNodeToCreateNode(child);
@@ -33,11 +33,11 @@ export function createCreatePattern(parseTree: ParseTree) {
         }
     })
 
-    return new CreateGraph(nodes, edges);
+    return new InsertPatternGraph(nodes, edges);
 }
 
-function mapParserNodeToCreateNode(node: NodePatternNode): CreateNode {
-    const n = new CreateNode();
+function mapParserNodeToCreateNode(node: NodePatternNode): InsertPatternNode {
+    const n = new InsertPatternNode();
 
     const label = findFirstInChildren(isLabelExpression, node);
     if (label) {
@@ -57,8 +57,8 @@ function mapParserNodeToCreateNode(node: NodePatternNode): CreateNode {
     return n;
 }
 
-function mapParserEdgeToCreateEdge(edge: EdgePatternNode, from: Node, to: Node): CreateEdge {
-    const e = new CreateEdge(from, to);
+function mapParserEdgeToCreateEdge(edge: EdgePatternNode, from: Node, to: Node): InsertPatternEdge {
+    const e = new InsertPatternEdge(from, to);
 
     const label = findFirstInChildren(isLabelExpression, edge);
     if (label) {
