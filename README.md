@@ -1,4 +1,4 @@
-# Graph DB
+# Graph DB 
 > This is a learning project on how to implement a graph database.
 > The base idea here is to have a somewhat functional gql implementation
 
