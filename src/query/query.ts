@@ -4,6 +4,8 @@ import {NaivePatternMatchingStrategy} from "./match-pattern/strategies/naive-pat
 
 import {MatchPatternGraph} from "./match-pattern/match-pattern-graph/match-pattern-graph";
 import {InsertPatternGraph} from "./insert-pattern-graph/insert-pattern-graph";
+import {ReturnPattern} from "./return-pattern/return-pattern";
+import {DeletePattern} from "./delete-pattern/delete-pattern";
 
 export class GraphQuery {
 
@@ -12,13 +14,16 @@ export class GraphQuery {
 
     constructor(
         public matchPatternGraph?: MatchPatternGraph,
-        public createPatternGraph?: InsertPatternGraph,
-        public markedForDeletion?: string[]
+        public insertPatternGraph?: InsertPatternGraph,
+        public deletionPattern?: DeletePattern,
+        public returnPattern?: ReturnPattern
     ) {
 
     }
 
-    toString(): string {
-        return `GraphQuery{ matchPatternGraph: ${this.matchPatternGraph?.toString()}, createPatternGraph: ${this.createPatternGraph?.toString()} }`;
+    toString()
+        :
+        string {
+        return `GraphQuery{ matchPatternGraph: ${this.matchPatternGraph?.toString()}, createPatternGraph: ${this.insertPatternGraph?.toString()} }`;
     }
 }

@@ -21,39 +21,33 @@ export class QueryService {
 
 
     public query(query: GraphQuery): QueryResult {
-
-        const matchingResult = query.patternMatchingStrategy.match(query, this.graphStore);
-        matchingResult.forEach(queryResult => {
+        const startTime = Date.now();
+        const matchingResults = query.patternMatchingStrategy.match(query, this.graphStore);
+        matchingResults.forEach(queryResult => {
             logger.debug(`Query result: ${queryResult.toString()}`);
         })
 
-        const rows: Graph[] = [];
         // Store variables
-        const aliasStore = new VariableStore();
-        matchingResult.forEach(matchingResult => aliasStore.insert(matchingResult))
+        const variableStore = new VariableStore();
+        variableStore.insert(matchingResults)
 
         // Delete Nodes and Edges
-        query.markedForDeletion?.forEach(toDelete => {
-            this.deleteNodeOrProperty(toDelete, query.detachDelete, aliasStore);
-        })
-
-        // Gather results
-        matchingResult.forEach(matchingResult => {
-            rows.push(this.mapToResult(matchingResult, aliasStore, query));
-        })
+        this.executeDeletions(query, variableStore);
 
         // Insert edges and nodes
-        this.createEdgesAndNodes(query, aliasStore);
+        this.executeInserts(query, variableStore);
 
-
-        return new QueryResult(rows);
+        // Gather results
+        const result = this.createResults(query, matchingResults, variableStore);
+        logger.debug(`Query done in: ${Date.now() - startTime}ms`);
+        return result;
     }
 
 
-    private createEdgesAndNodes(query: GraphQuery, aliasStore: VariableStore) {
-        if (!query.createPatternGraph) return;
+    private executeInserts(query: GraphQuery, aliasStore: VariableStore) {
+        if (!query.insertPatternGraph) return;
         const nodeMap: Record<string, Node> = {};
-        query.createPatternGraph.nodes.forEach(node => {
+        query.insertPatternGraph.nodes.forEach(node => {
             const newNode = node.toNode();
             if (node.alias) {
                 if (!aliasStore.has(node.alias)) {
@@ -66,7 +60,7 @@ export class QueryService {
             nodeMap[node.id] = newNode;
         })
 
-        query.createPatternGraph.edges.forEach(edge => {
+        query.insertPatternGraph.edges.forEach(edge => {
             let foundFrom: Node[] = [edge.from];
             if (edge.from.alias) foundFrom = aliasStore.get(edge.from.alias)
             let foundTo: Node[] = [edge.to];
@@ -83,30 +77,50 @@ export class QueryService {
         })
     }
 
-    private mapToResult(match: MatchPatternResult, aliasStore: VariableStore, query: GraphQuery) {
-        return new Graph(match.nodes.map(n => n.node), match.edges.map(e => e.edge))
-    }
 
-    public contains(query: GraphQuery): boolean {
-        return !!this.query(query);
-    }
-
-    private deleteNodeOrProperty(toDelete: string, detach: boolean, aliasStore: VariableStore) {
-        const parts = toDelete.split(".");
-        if (parts.length > 1) {
-            throw new Error("Not yet supported")
-        }
-        const rootAlias = parts[0];
-        if (!aliasStore.has(rootAlias)) throw new Error("Variable not found");
-        const type = aliasStore.getType(rootAlias);
-        if (type == Node.name) {
-            const nodes = aliasStore.get<Node>(rootAlias);
-            nodes.forEach(node => this.graphStore.removeNode(node, detach));
-        }
-        if (type == Edge.name) {
-            const edges = aliasStore.get<Edge>(rootAlias);
-            edges.forEach(node => this.graphStore.removeEdge(node));
-        }
+    private createResults(query: GraphQuery, matchingResults: MatchPatternResult[], variableStore: VariableStore): QueryResult {
+        if (!query.returnPattern) return new QueryResult([]);
+        if (query.returnPattern.returnAll) return new QueryResult([
+            new Graph(
+                matchingResults.flatMap(m => m.nodes.map(mn => mn.node)),
+                matchingResults.flatMap(m => m.edges.map(mn => mn.edge)),
+            )
+        ]);
+        const items = query.returnPattern.returnItems;
+        const rows = items.map(item => {
+            const name = item.variableName ?? '';
+            if (item.propertyPath) throw new Error('Not yet implemented');
+            if (variableStore.has(name)) {
+                const variableTypeNode = variableStore.get<Node>(name, Node.name);
+                const variableTypeEdge = variableStore.get<Edge>(name, Edge.name);
+                return new Graph(variableTypeNode, variableTypeEdge);
+            } else {
+                throw new Error(`Variable not found: ${name}`);
+            }
+        });
+        return new QueryResult(rows);
 
     }
+
+    private executeDeletions(query: GraphQuery, variableStore: VariableStore) {
+        query.deletionPattern?.markedForDeletion?.forEach(toDelete => {
+            const parts = toDelete.split(".");
+            if (parts.length > 1) {
+                throw new Error("Not yet supported")
+            }
+            const rootAlias = parts[0];
+            if (!variableStore.has(rootAlias)) throw new Error("Variable not found");
+            const type = variableStore.getType(rootAlias);
+            if (type == Node.name) {
+                const nodes = variableStore.get<Node>(rootAlias);
+                nodes.forEach(node => this.graphStore.removeNode(node, query.deletionPattern?.detachDelete ?? false));
+            }
+            if (type == Edge.name) {
+                const edges = variableStore.get<Edge>(rootAlias);
+                edges.forEach(node => this.graphStore.removeEdge(node));
+            }
+        });
+    }
+
+
 }

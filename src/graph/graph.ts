@@ -22,29 +22,52 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
         return this.edges.filter(edge => edge.to.id === node.id);
     }
 
-    public union(other: Graph<N, E>): Graph<N, E> {
-        const nodeMap = new Map<string, N>(
-            this.nodes.map(node => [node.id, node])
-        );
+    // public union(other: Graph<N, E>): Graph<N, E> {
+    //     const nodeMap = new Map<string, N>(
+    //         this.nodes.map(node => [node.id, node])
+    //     );
+    //
+    //     for (const node of other.nodes) {
+    //         if (!nodeMap.has(node.id)) {
+    //             nodeMap.set(node.id, node);
+    //         }
+    //     }
+    //
+    //     const nodes = Array.from(nodeMap.values());
+    //     const edges = new Set(this.edges.concat(other.edges));
+    //     for (const edge of edges) {
+    //         const fromNode = nodeMap.get(edge.from.id);
+    //         const toNode = nodeMap.get(edge.to.id);
+    //         if (!fromNode || !toNode) throw new Error('Could not find node');
+    //         edge.to = toNode;
+    //         edge.from = fromNode;
+    //     }
+    //
+    //     return new Graph<N, E>(nodes, [...edges]);
+    // }
 
-        for (const node of other.nodes) {
-            if (!nodeMap.has(node.id)) {
-                nodeMap.set(node.id, node);
-            }
-        }
+    public union(...graphs: Graph<N, E>[]): Graph<N, E> {
+        const allGraphs = [this, ...graphs];
+        const nodeMap = new Map<string, N>();
+        allGraphs.forEach(graph => {
+            graph.nodes.forEach(node => {
+                if (!nodeMap.has(node.id)) nodeMap.set(node.id, node);
+            });
+        });
 
-        const nodes = Array.from(nodeMap.values());
-        const edges = new Set(this.edges.concat(other.edges));
-        for (const edge of edges) {
-            const fromNode = nodeMap.get(edge.from.id);
-            const toNode = nodeMap.get(edge.to.id);
-            if (!fromNode || !toNode) throw new Error('Could not find node');
-            edge.to = toNode;
-            edge.from = fromNode;
-        }
-
-        return new Graph<N, E>(nodes, [...edges]);
+        const edges: E[] = [];
+        allGraphs.forEach(graph => {
+            graph.edges.forEach(edge => {
+                const from = nodeMap.get(edge.from.id);
+                const to = nodeMap.get(edge.to.id);
+                if(!from) throw new Error(`Could not find node ${edge.from.toString()}`);
+                if(!to) throw new Error(`Could not find node ${edge.to.toString()}`);
+                edges.push({ ...edge, from, to });
+            });
+        });
+        return new Graph<N, E>(Array.from(nodeMap.values()), edges);
     }
+
 
     private dfs(node: Node, visited: Set<Node>, component: Node[]): void {
         visited.add(node);
@@ -90,6 +113,6 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
     }
 
     removeEdge(edge: Edge) {
-        this.edges = this.edges.filter(edge => edge.id !== edge.id);
+        this.edges = this.edges.filter(e => e.id !== edge.id);
     }
 }

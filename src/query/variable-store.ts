@@ -43,7 +43,7 @@ export class VariableStore {
     get<T>(name: string, type?: string): T[] {
         if (!type)
             return this.store[name].entities;
-        if (this.store[name].type != type) throw new Error("Entity does not contain type '" + type + "'");
+        if (this.store[name].type != type) return [];
         return this.store[name].entities;
     }
 
@@ -51,16 +51,26 @@ export class VariableStore {
         return this.store[name].type;
     }
 
-    insert(matchingResult: MatchPatternResult) {
-        matchingResult.nodes.forEach(node => {
-            if (node.match.alias) {
-                this.add(node.match.alias, node.node);
-            }
-        })
-        matchingResult.edges.forEach(edge => {
-            if (edge.match.alias) {
-                this.add(edge.match.alias, edge.edge)
-            }
-        })
+    getAllEntities<T>(type: string): T[] {
+        return Object.keys(this.store)
+            .filter(key => this.store[key].type == type)
+            .flatMap((key) => {
+                return this.store[key].entities
+            })
+    }
+
+    insert(matchingResults: MatchPatternResult[]) {
+        matchingResults.forEach(matchingResult => {
+            matchingResult.nodes.forEach(node => {
+                if (node.match.alias) {
+                    this.add(node.match.alias, node.node);
+                }
+            });
+            matchingResult.edges.forEach(edge => {
+                if (edge.match.alias) {
+                    this.add(edge.match.alias, edge.edge)
+                }
+            });
+        });
     }
 }

@@ -17,20 +17,19 @@ export class MatchPatternEdgeBuilder {
         return new MatchPatternNodeBuilder(props, this.parent, undefined, this);
     }
 
-    createEdges(left: MatchPatternNode, right: MatchPatternNode): MatchPatternEdge[] {
+    createEdge(left: MatchPatternNode, right: MatchPatternNode): MatchPatternEdge {
         if (this.direction == '>') {
-            return [new MatchPatternEdge(left, right, this.props, this.label, this.alias)];
+            return new MatchPatternEdge(left, right, this.props, this.label, this.alias);
         }
         if (this.direction == '<') {
-            return [new MatchPatternEdge(right, left, this.props, this.label, this.alias)];
+            return new MatchPatternEdge(right, left, this.props, this.label, this.alias);
         }
         if (this.direction == '-') {
-            return [
-                new MatchPatternEdge(right, left, this.props, this.label, this.alias),
-                new MatchPatternEdge(left, right, this.props, this.label, this.alias),
-            ];
+            const edge = new MatchPatternEdge(left, right, this.props, this.label, this.alias);
+            edge.ignoreDirection = true;
+            return edge;
         }
-        return []
+        throw new Error("Direction not defined");
     }
 
     setAlias(text: string) {
@@ -69,8 +68,8 @@ export class MatchPatternNodeBuilder {
             const currentNode = nodeBuilder.createNode()
             const edgeBuilder = nodeBuilder.edge;
             if (edgeBuilder) {
-                const edges = edgeBuilder.createEdges(createNode(edgeBuilder.parent!)!, currentNode)
-                graphEdges.push(...edges);
+                const edge = edgeBuilder.createEdge(createNode(edgeBuilder.parent!)!, currentNode)
+                graphEdges.push(edge);
             }
             graphNodes.push(currentNode);
             return currentNode;

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "test": "jest",
-    "ui": "npm run build:ui && electron ./src/ui/main.js",
+    "ui": "npm run build:ui:electron && electron ./src/ui/main.js",
     "build:ui:electron": "vite build --config ./src/ui/vite.config.ts --mode electron",
     "generate": "antlr-ng -Dlanguage=TypeScript -l -v -o generated GQL.g4 ",
     "build:ui:browser": "vite build --config ./src/ui/vite.config.ts --mode browser",

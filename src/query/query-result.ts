@@ -7,9 +7,7 @@ export class QueryResult {
         public rawRows: Graph[],
         public readonly error?: Error
     ) {
-        this.graph = rawRows.reduce((previousValue, currentValue) => {
-            return previousValue.union(currentValue);
-        }, new Graph());
+        this.graph = new Graph().union(...this.rawRows);
 
     }
 

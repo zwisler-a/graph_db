@@ -5,6 +5,7 @@ import {logger} from "../util/logger";
 import {QueryResult} from "../query/query-result";
 import {Graph} from "../graph/graph";
 import {InMemoryGraphStore} from "../store/in-memory-graph-store";
+import {JsonGraphStore} from "../store/json-graph-store";
 
 async function createWindow() {
     const win = new BrowserWindow({
@@ -32,8 +33,8 @@ app.on('activate', () => {
 const parser = new GraphQLParser();
 
 
-// const graphStore = new JsonGraphStore(new Graph(), "./graph.json");
-const graphStore = InMemoryGraphStore.from(new Graph());
+const graphStore = new JsonGraphStore(new Graph(), "./graph.json");
+// const graphStore = InMemoryGraphStore.from(new Graph());
 const queryService = QueryService.from(graphStore)
 
 ipcMain.handle('get-graph-data', (event, args: string): QueryResult => {
