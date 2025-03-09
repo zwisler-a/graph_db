@@ -1,47 +1,50 @@
-import {describe, expect, test} from '@jest/globals';
-import {CypherQueryParser} from "../../src/parser/cypher/cypher-query-parser";
+import {beforeEach, describe, expect, test} from '@jest/globals';
 import {QueryService} from "../../src/query/query-service";
 import {InMemoryGraphStore} from "../../src/store/in-memory-graph-store";
 import {Graph} from "../../src/graph/graph";
+import {GraphQLParser} from "../../src/parser/gql-parser";
 
 describe('Query service match', () => {
 
+    const queryParser = new GraphQLParser();
+    const graph = new Graph();
+    const graphStore = InMemoryGraphStore.from(graph);
+    const queryService = QueryService.from(graphStore)
+
+    beforeEach(() => {
+        graphStore.getGraph().nodes = [];
+        graphStore.getGraph().edges = [];
+    })
+
     test('all nodes', () => {
         const setupQuery: string = `
-            CREATE (alice:Person),(bob:Person),(charlie:Person)
+            INSERT (alice:Person),(bob:Person),(charlie:Person)
         `;
 
-        const cypherQuery: string = `
+        const matchQuery: string = `
             MATCH (n)
         `;
-        const parser = new CypherQueryParser();
-        const graph = new Graph();
-        const graphStore = InMemoryGraphStore.from(graph);
-        const queryService = QueryService.from(graphStore)
 
-        queryService.query(parser.parse(setupQuery));
-        const res = queryService.query(parser.parse(cypherQuery));
+        queryService.query(queryParser.parse(setupQuery));
+        const res = queryService.query(queryParser.parse(matchQuery));
 
         expect(res.rawRows.length).toBe(3);
     });
 
     test('single relation', () => {
         const setupQuery: string = `
-            CREATE (alice:Person),(bob:Person),(alice)-[:knows]->(bob)
+            INSERT (alice:Person),(bob:Person),(alice)-[:knows]->(bob)
         `;
 
         const cypherQuery: string = `
             MATCH (n)-[:knows]->(m)
         `;
-        const parser = new CypherQueryParser();
-        const graph = new Graph();
-        const graphStore = InMemoryGraphStore.from(graph);
-        const queryService = QueryService.from(graphStore)
 
-        queryService.query(parser.parse(setupQuery));
-        const res = queryService.query(parser.parse(cypherQuery));
+        queryService.query(queryParser.parse(setupQuery));
+        const res = queryService.query(queryParser.parse(cypherQuery));
 
-        expect(res.rawRows.length).toBe(1);
+        expect(res.graph.edges.length).toBe(1);
+        expect(res.graph.nodes.length).toBe(2);
     });
 
 });

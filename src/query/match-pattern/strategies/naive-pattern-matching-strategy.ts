@@ -1,66 +1,74 @@
-import {PatternMatchingStrategy} from "./pattern-matching-strategy";
-import {MatchPatternNode} from "../match-pattern-graph/match-pattern-node";
-import {Node} from "../../../graph/node";
-import {GraphQuery} from "../../query";
-import {GraphStore} from "../../../store/graph-store";
-import {MatchPatternResult} from "../match-pattern-result";
-import {MatchPatternEdge} from "../match-pattern-graph/match-pattern-edge";
-import {Edge} from "../../../graph/edge";
-import {logger} from "../../../util/logger";
+import { PatternMatchingStrategy } from "./pattern-matching-strategy";
+import { MatchPatternNode } from "../match-pattern-graph/match-pattern-node";
+import { Node } from "../../../graph/node";
+import { GraphQuery } from "../../query";
+import { GraphStore } from "../../../store/graph-store";
+import { MatchPatternResult } from "../match-pattern-result";
+import { MatchPatternEdge } from "../match-pattern-graph/match-pattern-edge";
+import { Edge } from "../../../graph/edge";
+import { logger } from "../../../util/logger";
 
-/**
- * - Pick random starting point and build from there
- */
 export class NaivePatternMatchingStrategy implements PatternMatchingStrategy {
-
-
     match(query: GraphQuery, store: GraphStore): MatchPatternResult[] {
-        if ((query.matchPatternGraph?.nodes.length ?? 0) === 0) return [];
-        const startMatchingNodes = query.matchPatternGraph!
-            .getComponents().map(component => component[0])
-        const seedNodes = startMatchingNodes
-            .map(startMatchingNode => ({
-                seedNodes: this.findMatchingNode(startMatchingNode, store.getNodes()),
-                startMatchingNode,
-            }));
-        const rootPath = new MatchPatternResult();
-        return seedNodes.flatMap(({seedNodes, startMatchingNode}) => {
-            return seedNodes.flatMap(seedNode => {
-                return this.dfs(seedNode, startMatchingNode, rootPath.fork(), query, store);
-            })
-        });
+        const patternGraph = query.matchPatternGraph;
+        if (!patternGraph || patternGraph.nodes.length === 0) return [];
+
+        const startNodes = patternGraph.getComponents().map(component => component[0]);
+        const results: MatchPatternResult[] = [];
+
+        for (const patternNode of startNodes) {
+            const seeds = this.findMatchingNodes(patternNode, store.getNodes());
+            for (const seed of seeds) {
+                results.push(...this.dfs(seed, patternNode, new MatchPatternResult(), query, store));
+            }
+        }
+        return results;
     }
 
+    private dfs(currentNode: Node, patternNode: MatchPatternNode, currentPath: MatchPatternResult, query: GraphQuery, store: GraphStore): MatchPatternResult[] {
+        if (!patternNode.matches(currentNode)) return [];
+        const path = currentPath.fork();
+        path.addNode(currentNode, patternNode);
+        logger.debug(`Path: ${path.toString()}`);
 
-    private dfs(currentNode: Node, currentMatchingNode: MatchPatternNode, currentPath: MatchPatternResult, query: GraphQuery, store: GraphStore): MatchPatternResult[] {
-        if (!currentMatchingNode.matches(currentNode)) return [];
-        currentPath.addNode(currentNode, currentMatchingNode);
-        logger.debug(`Path: ${currentPath.toString()}`);
-        // Get all edges in contact with the current matching edge
-        const matchingEdges = query.matchPatternGraph!.getEdgesStartingAtNode(currentMatchingNode)
-            .concat(query.matchPatternGraph?.getEdgesEndingAtNode(currentMatchingNode) ?? []).filter(currentPath.filterVisitedMatchingEdge());
-        if (matchingEdges.length == 0) return [currentPath];
-        // Get all edges from the current node
-        const edges = store.getOutgoingEdges(currentNode).concat(store.getIncomingEdges(currentNode)).filter(currentPath.filterVisitedEdge());
-        return matchingEdges.flatMap(matchingEdge => {
-            // Next matching node is on the other side of the currentMatchingEdge
-            const nextMatchingNode = matchingEdge.to == currentMatchingNode ? matchingEdge.from : matchingEdge.to;
-            const matchedEdges = this.findMatchingEdge(matchingEdge, edges);
-            return matchedEdges.flatMap(matchedEdge => {
-                // Next Node is on the other side of the current edge
-                const nextNode = matchedEdge.to == currentNode ? matchedEdge.from : matchedEdge.to;
-                currentPath.addEdge(matchedEdge, matchingEdge);
-                return this.dfs(nextNode, nextMatchingNode, currentPath.fork(), query, store);
-            })
-        })
+        const patternGraph = query.matchPatternGraph!;
+        const patternEdges = [
+            ...patternGraph.getEdgesStartingAtNode(patternNode),
+            ...patternGraph.getEdgesEndingAtNode(patternNode)
+        ].filter(path.filterVisitedMatchingEdge());
+
+        if (patternEdges.length === 0) return [path];
+
+        const storeEdges = [
+            ...store.getOutgoingEdges(currentNode),
+            ...store.getIncomingEdges(currentNode)
+        ].filter(path.filterVisitedEdge());
+
+        const results: MatchPatternResult[] = [];
+        for (const patternEdge of patternEdges) {
+            const nextPatternNode = this.getOtherNodeOfEdge(patternEdge, patternNode);
+            const matchingEdges = this.findMatchingEdges(patternEdge, storeEdges);
+            for (const edge of matchingEdges) {
+                const nextNode = this.getOtherNodeOfEdge(edge, currentNode);
+                const newPath = path.fork();
+                newPath.addEdge(edge, patternEdge);
+                results.push(...this.dfs(nextNode, nextPatternNode, newPath, query, store));
+            }
+        }
+        return results;
     }
 
-    private findMatchingNode(patternNode: MatchPatternNode, nodes: Node[]) {
-        return nodes.filter(node => patternNode.matches(node))
+    private findMatchingNodes(patternNode: MatchPatternNode, nodes: Node[]): Node[] {
+        return nodes.filter(node => patternNode.matches(node));
     }
 
-    private findMatchingEdge(patternEdge: MatchPatternEdge, nodes: Edge[]) {
-        return nodes.filter(node => patternEdge.matches(node))
+    private findMatchingEdges(patternEdge: MatchPatternEdge, edges: Edge[]): Edge[] {
+        return edges.filter(edge => patternEdge.matches(edge));
     }
 
+    private getOtherNodeOfEdge<T extends Node>(edge: Edge<T>, currentNode: T): T {
+        if(edge.from.id === currentNode.id) return edge.to;
+        if(edge.to.id === currentNode.id) return edge.from;
+        throw new Error(`Cant find node of the other side: ${edge.id}`);
+    }
 }

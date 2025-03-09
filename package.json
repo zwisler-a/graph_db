@@ -7,8 +7,13 @@
     "start": "ts-node src/index.ts",
     "test": "jest",
     "ui": "npm run build:ui && electron ./src/ui/main.js",
-    "build:ui": "vite build --config ./src/ui/vite.config.ts ",
-    "generate": "antlr-ng -Dlanguage=TypeScript -l -v -o generated GQL.g4 "
+    "build:ui:electron": "vite build --config ./src/ui/vite.config.ts --mode electron",
+    "generate": "antlr-ng -Dlanguage=TypeScript -l -v -o generated GQL.g4 ",
+    "build:ui:browser": "vite build --config ./src/ui/vite.config.ts --mode browser",
+    "build:browser:copy-html": "cp ./src/ui/index.html ./src/ui/dist/browser/",
+    "build:browser:copy-css": "cp ./src/ui/styles.css ./src/ui/dist/browser/",
+    "build:browser:replace-js": "replace-in-file ./dist/electron \".\" ./src/ui/dist/browser/index.html",
+    "build:browser": "npm run build:ui:browser && npm run build:browser:copy-html && npm run build:browser:copy-css && npm run build:browser:replace-js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +22,7 @@
     "@types/d3": "^7.4.3",
     "cross-env": "^7.0.3",
     "electron": "^35.0.0",
+    "replace-in-file": "^8.3.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
@@ -27,7 +33,7 @@
     "antlr4ng": "^3.0.15",
     "class-transformer": "^0.5.1",
     "d3": "^7.9.0",
-    "reflect-metadata": "^0.2.2",
-    "winston": "^3.17.0"
+    "loglevel": "^1.9.2",
+    "reflect-metadata": "^0.2.2"
   }
 }

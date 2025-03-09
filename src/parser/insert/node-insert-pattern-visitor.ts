@@ -40,7 +40,7 @@ export class NodeInsertPatternVisitor extends GQLVisitor<InsertPatternNodeBuilde
     }
 
     visitLabelName = (ctx: LabelNameContext) => {
-        this.nodeBuilder.label = (ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText());
+        this.nodeBuilder.label = ctx.identifier()?.getText();
         return null;
     }
 

@@ -25,7 +25,7 @@ export class EdgeInsertPatternVisitor extends GQLVisitor<InsertPatternEdgeBuilde
     }
 
     visitLabelName = (ctx: LabelNameContext) => {
-        const identifier = ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText();
+        const identifier = ctx.identifier()?.getText();
         if (identifier) {
             this.edgePatternBuilder.label = identifier;
         }

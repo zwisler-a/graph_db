@@ -58,7 +58,7 @@ export class MatchPatternResult {
         for (let i = 0; i < this.nodes.length; i++) {
             str += `(${this.nodes[i].match.alias} ${JSON.stringify(this.nodes[i].node.getProperties())})`;
             if (this.edges[i]) {
-                str += `-${this.edges[i].match.label}-`;
+                str += `-${this.edges[i].match.label || ''}-`;
             }
         }
         return str;

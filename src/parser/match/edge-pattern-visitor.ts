@@ -44,7 +44,7 @@ export class EdgePatternVisitor extends GQLVisitor<any> {
     }
 
     visitLabelName = (ctx: LabelNameContext) => {
-        this.edgePatternBuilder.label = ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText();
+        this.edgePatternBuilder.label = ctx.identifier()?.getText();
         return this.visitChildren(ctx);
     }
 

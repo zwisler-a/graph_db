@@ -1,7 +1,8 @@
 import {Component} from "../core/component";
 import {GraphView} from "./graph-view";
 import {QueryResult} from "../../query/query-result";
-const {ipcRenderer} = require('electron');
+import api from "../core/api";
+
 
 @Component('graph-tab')
 class GraphTab extends HTMLElement {
@@ -38,7 +39,7 @@ class GraphTab extends HTMLElement {
             const customEvent = event as CustomEvent<{ query: string }>;
             const {query} = customEvent.detail;
             if (query && this.graphView) {
-                const queryResults: QueryResult = await ipcRenderer.invoke('get-graph-data', query);
+                const queryResults: QueryResult = await api.getGraph(query);
                 console.log(this.graphView)
                 this.graphView.drawGraph(queryResults.graph);
             }

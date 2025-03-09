@@ -34,7 +34,7 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
         }
 
         const nodes = Array.from(nodeMap.values());
-        const edges = this.edges.concat(other.edges);
+        const edges = new Set(this.edges.concat(other.edges));
         for (const edge of edges) {
             const fromNode = nodeMap.get(edge.from.id);
             const toNode = nodeMap.get(edge.to.id);
@@ -43,7 +43,7 @@ export class Graph<N extends Node = Node, E extends Edge = Edge> {
             edge.from = fromNode;
         }
 
-        return new Graph<N, E>(nodes, edges);
+        return new Graph<N, E>(nodes, [...edges]);
     }
 
     private dfs(node: Node, visited: Set<Node>, component: Node[]): void {

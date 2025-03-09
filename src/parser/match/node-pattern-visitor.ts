@@ -47,7 +47,7 @@ export class NodePatternVisitor extends GQLVisitor<MatchPatternNodeBuilder| null
     }
 
     visitLabelName = (ctx: LabelNameContext) => {
-        this.nodeBuilder.label = ctx.identifier().regularIdentifier()?.REGULAR_IDENTIFIER()?.getText();
+        this.nodeBuilder.label = ctx.identifier()?.getText();
         return this.visitChildren(ctx);
     }
 

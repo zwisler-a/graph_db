@@ -26,20 +26,24 @@ export class QueryService {
         matchingResult.forEach(queryResult => {
             logger.debug(`Query result: ${queryResult.toString()}`);
         })
-        const rows: Graph[] = [];
 
-        if (matchingResult.length == 0) this.createEdgesAndNodes(query, new VariableStore());
+        const rows: Graph[] = [];
+        // Store variables
         const aliasStore = new VariableStore();
         matchingResult.forEach(matchingResult => aliasStore.insert(matchingResult))
 
+        // Delete Nodes and Edges
         query.markedForDeletion?.forEach(toDelete => {
             this.deleteNodeOrProperty(toDelete, query.detachDelete, aliasStore);
         })
 
+        // Gather results
         matchingResult.forEach(matchingResult => {
             rows.push(this.mapToResult(matchingResult, aliasStore, query));
-            this.createEdgesAndNodes(query, aliasStore);
         })
+
+        // Insert edges and nodes
+        this.createEdgesAndNodes(query, aliasStore);
 
 
         return new QueryResult(rows);
@@ -48,22 +52,27 @@ export class QueryService {
 
     private createEdgesAndNodes(query: GraphQuery, aliasStore: VariableStore) {
         if (!query.createPatternGraph) return;
+        const nodeMap: Record<string, Node> = {};
         query.createPatternGraph.nodes.forEach(node => {
+            const newNode = node.toNode();
             if (node.alias) {
                 if (!aliasStore.has(node.alias)) {
-                    aliasStore.add(node.alias, node);
-                    this.graphStore.addNode(node.toNode());
+                    aliasStore.add(node.alias, newNode);
+                    this.graphStore.addNode(newNode);
                 }
             } else {
-                this.graphStore.addNode(node.toNode());
+                this.graphStore.addNode(newNode);
             }
+            nodeMap[node.id] = newNode;
         })
 
         query.createPatternGraph.edges.forEach(edge => {
-            let foundFrom = [edge.from];
+            let foundFrom: Node[] = [edge.from];
             if (edge.from.alias) foundFrom = aliasStore.get(edge.from.alias)
-            let foundTo = [edge.to];
+            let foundTo: Node[] = [edge.to];
             if (edge.to.alias) foundTo = aliasStore.get(edge.to.alias)
+            if (!edge.from.alias) foundFrom = foundFrom.map(f => nodeMap[f.id]);
+            if (!edge.to.alias) foundTo = foundTo.map(f => nodeMap[f.id]);
 
             foundFrom.forEach(fromNode => {
                 foundTo.forEach(toNode => {

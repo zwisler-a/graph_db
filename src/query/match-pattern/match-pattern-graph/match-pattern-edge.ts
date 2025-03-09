@@ -5,6 +5,7 @@ import {PropertiesMap} from "../../../graph/properties";
 export class MatchPatternEdge extends Edge<MatchPatternNode> {
 
     alias?: string;
+    direction?: string;
 
     constructor(
         from: MatchPatternNode,
