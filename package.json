@@ -6,11 +6,12 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "test": "jest",
-    "ui": "npm run build:ui:electron && electron src/ui/electron/main.js",
+    "ui": "concurrently \"npm run serve:ui:electron\" \"electron src/ui/electron/main.js\"",
     "build:ui:electron": "vite build --config ./src/ui/vite.config.ts --mode electron",
     "generate": "antlr-ng -Dlanguage=TypeScript -l -v -o generated GQL.g4 ",
     "build:ui:browser": "vite build --config ./src/ui/vite.config.ts --mode browser ",
     "serve:ui:browser": "vite --host --mode browser --config ./src/ui/vite.config.ts",
+    "serve:ui:electron": "vite --host --mode electron --config ./src/ui/vite.config.ts",
     "build:browser:copy-html": "cp src/ui/browser/index.html ./src/ui/dist/browser/",
     "build:browser:copy-css": "cp ./src/ui/styles.css ./src/ui/dist/browser/",
     "build:browser:replace-js": "replace-in-file \"../index.ts\" \"./index.js\" ./src/ui/dist/browser/index.html",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/d3": "^7.4.3",
+    "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "electron": "^35.0.0",
     "replace-in-file": "^8.3.0",

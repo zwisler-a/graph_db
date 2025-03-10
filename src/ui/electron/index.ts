@@ -16,7 +16,7 @@ async function createWindow() {
             contextIsolation: false,
         }
     });
-    await win.loadFile('index.html');
+    await win.loadURL('http://localhost:5173/src/ui/browser/index.html');
 }
 
 app.whenReady().then(createWindow);

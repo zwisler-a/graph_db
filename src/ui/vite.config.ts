@@ -15,7 +15,8 @@ export default defineConfig(({mode}) => ({
         }
     },
     server: {
-        open: '/src/ui/browser/index.html',
-        hmr: true
+        open: mode === 'electron' ? undefined : '/src/ui/browser/index.html',
+        hmr: true,
+        port: 5173
     },
 }));

@@ -15,6 +15,7 @@ class GraphTab extends HTMLElement {
     private errorDisplay?: Element | null;
     private nodeDetails?: NodeDetails | null;
     private edgeDetails?: EdgeDetails | null;
+    private detailsView?: HTMLElement | null;
 
     constructor() {
         super();
@@ -26,7 +27,7 @@ class GraphTab extends HTMLElement {
           <div class="error" js-error-display></div>
           <graph-render-properties></graph-render-properties>
           <div class="graph-tab-content">
-            <div class="details-view">
+            <div style="display: none" class="details-view">
                 <node-details></node-details>
                 <edge-details></edge-details>    
             </div>
@@ -36,6 +37,7 @@ class GraphTab extends HTMLElement {
         this.querySelector('graph-render-properties')?.addEventListener('graph-settings-changed', this.graphPropertiesHandler());
         this.querySelector('gql-input')?.addEventListener('query', this.graphQueryHandler());
         this.errorDisplay = this.querySelector('[js-error-display]');
+        this.detailsView = this.querySelector('.details-view');
         this.nodeDetails = this.querySelector('node-details');
         this.edgeDetails = this.querySelector('edge-details');
         this.graphView = this.querySelector('graph-view')!;
@@ -55,13 +57,14 @@ class GraphTab extends HTMLElement {
 
     private showNodeHandler() {
         return (event: Event) => {
-            console.log(this.nodeDetails);
+            if(this.detailsView) this.detailsView.style.display = "flex"
             this.nodeDetails?.show((event as CustomEvent<Node>).detail)
         };
     }
 
     private showEdgeHandler() {
         return (event: Event) => {
+            if(this.detailsView) this.detailsView.style.display = "flex"
             this.edgeDetails?.show((event as CustomEvent<Edge>).detail)
         };
     }
