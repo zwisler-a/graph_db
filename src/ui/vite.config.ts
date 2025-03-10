@@ -6,12 +6,16 @@ export default defineConfig(({mode}) => ({
     },
     build: {
         rollupOptions: {
-            input: './src/ui/ui-index.ts',
+            input: './src/ui/index.ts',
             output: {
                 format: 'iife',
-                dir: mode === 'electron' ? './src/ui/dist/electron': './src/ui/dist/browser',
+                dir: mode === 'electron' ? './src/ui/dist/electron' : './src/ui/dist/browser',
                 entryFileNames: 'index.js',
             }
         }
-    }
+    },
+    server: {
+        open: '/src/ui/browser/index.html',
+        hmr: true
+    },
 }));

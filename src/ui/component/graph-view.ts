@@ -1,22 +1,26 @@
 import * as d3 from 'd3';
-import {SimulationLinkDatum, SimulationNodeDatum} from 'd3';
+import {Simulation, SimulationLinkDatum, SimulationNodeDatum} from 'd3';
 import {Graph} from "../../graph/graph";
 import {Node} from "../../graph/node";
 import {Edge} from "../../graph/edge";
 import {Component} from "../core/component";
+import {RenderProperties} from "./graph-render-properties";
 
 @Component('graph-view')
 class GraphView extends HTMLElement {
 
     public _nodeNameFormatter: (node: Partial<Node>) => string = (n: any) => {
-        return `[${n.label}]${JSON.stringify(n.properties, null, 2)}`;
+        return `[${n.label}]${this.showProps ? JSON.stringify(n.properties, null, 2) : ''}`;
     }
     public _edgeNameFormatter: (node: Partial<Edge>) => string = (e) => {
         return `[${e.label}]`
     }
     public charge = -100;
     public linkDistance = 200;
-    public centerStrength = 0.5;
+    public showProps = false;
+    private simulation?: Simulation<Partial<Node> & { original: Node } & SimulationNodeDatum, undefined>;
+    private edges?: (Partial<Edge> & { original: Edge } & SimulationLinkDatum<SimulationNodeDatum>)[];
+    private svg?: SVGSVGElement;
 
     constructor() {
         super();
@@ -24,32 +28,52 @@ class GraphView extends HTMLElement {
 
     connectedCallback() {
         this.innerHTML = `<svg></svg>`;
+        this.svg = this.querySelector('svg') as SVGSVGElement;
+    }
+
+    public updateRenderProperties(props: Partial<RenderProperties>) {
+        this.charge = props.charge ?? this.charge;
+        this.linkDistance = props.linkDistance ?? this.linkDistance;
+        this.showProps = props.showProps ?? this.showProps;
+        if (this.simulation && this.svg) {
+            this.simulation
+                .force('link', d3.forceLink(this.edges).id((d: any) => d.id).distance(this.linkDistance))
+                .force('charge', d3.forceManyBody().strength(this.charge))
+                // .force('center', d3.forceCenter(+this.svg?.clientWidth / 2, +this.svg?.clientHeight / 2))
+                .force('x', d3.forceX(+this.svg?.clientWidth / 2))
+                .force('y', d3.forceY(+this.svg?.clientHeight / 2));
+            this.simulation?.alpha(1).restart();
+        }
     }
 
     public async drawGraph(graph: Graph) {
-        const svg = this.querySelector('svg') as SVGSVGElement;
-        const nodes: (Partial<Node> & SimulationNodeDatum)[] = graph.nodes.map((node: Node) => ({...node}));
-        const edges: (Partial<Edge> & SimulationLinkDatum<SimulationNodeDatum>)[] = graph.edges.flatMap((edge) =>
+        if (!this.svg) return;
+        const nodes: (Partial<Node>  & { original: Node } & SimulationNodeDatum)[] = graph.nodes.map((node: Node) => ({
+            ...node,
+            original: node
+        }));
+        this.edges = graph.edges.flatMap((edge) =>
             ({
                 ...edge,
                 source: edge.from.id,
                 target: edge.to.id,
+                original: edge
             })
         );
-        while (svg.firstChild) {
-            svg.removeChild(svg.firstChild);
+        while (this.svg?.firstChild) {
+            this.svg?.removeChild(this.svg?.firstChild);
         }
 
-        const width = +svg.clientWidth;
-        const height = +svg.clientHeight;
-        console.log(width, height);
+        const width = +this.svg?.clientWidth;
+        const height = +this.svg?.clientHeight;
 
-        const simulation = d3.forceSimulation(nodes)
-            .force('link', d3.forceLink(edges).id((d: any) => d.id).distance(this.linkDistance))
+        this.simulation = d3.forceSimulation(nodes)
+            .force('link', d3.forceLink(this.edges).id((d: any) => d.id).distance(this.linkDistance))
             .force('charge', d3.forceManyBody().strength(this.charge))
-            .force('center', d3.forceCenter(width / 2, height / 2).strength(this.centerStrength));
+            .force('x', d3.forceX(width / 2))
+            .force('y', d3.forceY(height / 2));
 
-        const defs = d3.select(svg).append('defs');
+        const defs = d3.select(this.svg).append('defs');
         const rnd = Math.ceil(Math.random() * 100);
         defs.append('marker')
             .attr('id', 'arrow' + rnd)
@@ -63,13 +87,14 @@ class GraphView extends HTMLElement {
             .attr('d', 'M0,-5L10,0L0,5')
             .attr('fill', '#999');
 
-        const edgeGroup = d3.select(svg).append('g')
+        const edgeGroup = d3.select(this.svg).append('g')
             .attr('class', 'edges')
             .selectAll('g.edge')
-            .data(edges)
+            .data(this.edges)
             .enter()
             .append('g')
-            .attr('class', 'edge');
+            .attr('class', 'edge')
+            .on('click', (event, d) => this.dispatchEvent(new CustomEvent('edgeClick', {detail: d.original})));
 
         edgeGroup.append('text')
             .attr('text-anchor', 'middle')
@@ -82,16 +107,17 @@ class GraphView extends HTMLElement {
             .attr('stroke-width', 2)
             .attr('marker-end', `url(#arrow${rnd})`);
 
-        const nodeGroup = d3.select(svg).append('g')
+        const nodeGroup = d3.select(this.svg).append('g')
             .attr('class', 'nodes')
             .selectAll('g.node')
             .data(nodes)
             .enter()
             .append('g')
             .attr('class', 'node')
+            .on('click', (event, d) => this.dispatchEvent(new CustomEvent('nodeClick', {detail: d.original})))
             .call(d3.drag<SVGGElement, any, d3.SubjectPosition>()
                 .on('start', (event, d) => {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    if (!event.active) this.simulation?.alphaTarget(0.3).restart();
                     d.fx = d.x;
                     d.fy = d.y;
                 })
@@ -100,7 +126,7 @@ class GraphView extends HTMLElement {
                     d.fy = event.y;
                 })
                 .on('end', (event, d) => {
-                    if (!event.active) simulation.alphaTarget(0);
+                    if (!event.active) this.simulation?.alphaTarget(0);
                     d.fx = null;
                     d.fy = null;
                 })
@@ -115,7 +141,7 @@ class GraphView extends HTMLElement {
             .attr('dy', '.35em')
             .text(this._nodeNameFormatter);
 
-        simulation.on('tick', () => {
+        this.simulation?.on('tick', () => {
             edgeGroup.select('line')
                 .attr('x1', (d: any) => d.source.x)
                 .attr('y1', (d: any) => d.source.y)
@@ -130,11 +156,11 @@ class GraphView extends HTMLElement {
         });
 
         // Create a group element for zooming and panning
-        const graphGroup = d3.select(svg).append('g');
+        const graphGroup = d3.select(this.svg).append('g');
 
         // Move the node and edge groups into the graphGroup
-        graphGroup.append(() => svg.querySelector('.edges'));
-        graphGroup.append(() => svg.querySelector('.nodes'));
+        graphGroup.append(() => this.svg?.querySelector('.edges') as any);
+        graphGroup.append(() => this.svg?.querySelector('.nodes') as any);
 
         // Zoom and pan behavior
         const zoom = d3.zoom()
@@ -143,7 +169,7 @@ class GraphView extends HTMLElement {
                 graphGroup.attr('transform', event.transform);
             });
 
-        d3.select(svg).call(zoom as any);
+        d3.select(this.svg).call(zoom as any);
     }
 }
 

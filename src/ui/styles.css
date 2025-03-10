@@ -8,6 +8,17 @@ body {
     height: 100vh;
 }
 
+.graph-tab-content {
+    display: flex;
+    flex: 1 1 auto;
+    padding-top:8px;
+}
+
+.details-view {
+    border-right: solid 1px gray;
+    padding-right: 8px;
+}
+
 tabs-view {
     display: flex;
     flex-direction: column;

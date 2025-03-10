@@ -5,6 +5,14 @@ export abstract class Properties {
     private properties: PropertiesMap = {}
 
     public getProperty(key: string) {
+        if (key.includes('.')) {
+            const keys = key.split('.');
+            let currentValue = this.properties;
+            for (const currentKey of keys) {
+                if (currentValue[currentKey] == undefined) throw new Error(`Property "${key}" not found`);
+                currentValue = currentValue[currentKey];
+            }
+        }
         return this.properties[key];
     }
 

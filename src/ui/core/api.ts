@@ -1,10 +1,10 @@
 import {QueryResult} from "../../query/query-result";
-import {ipcRenderer} from "electron";
 import {GraphQLParser} from "../../parser/gql-parser";
 import {InMemoryGraphStore} from "../../store/in-memory-graph-store";
 import {Graph} from "../../graph/graph";
 import {QueryService} from "../../query/query-service";
 import {logger} from "../../util/logger";
+import {LocalStorageGraphStore} from "../../store/localstorage-graph-store";
 
 declare global {
     const __ELECTRON__: boolean;
@@ -18,7 +18,7 @@ if (__ELECTRON__) {
     }
 } else {
     const parser = new GraphQLParser();
-    const graphStore = InMemoryGraphStore.from(new Graph());
+    const graphStore = new LocalStorageGraphStore(new Graph());
     const queryService = QueryService.from(graphStore)
     api.getGraph = async (query: string): Promise<QueryResult> => {
         logger.info('Getting graph data for: ' + query);

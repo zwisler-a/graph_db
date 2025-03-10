@@ -8,6 +8,7 @@ import {logger} from "../util/logger";
 
 export class GraphQLParser implements QueryParser {
     parse(query: string): GraphQuery {
+        const startTime = Date.now();
         const inputStream = CharStream.fromString(query);
         const lexer = new GQLLexer(inputStream);
         const tokenStream = new CommonTokenStream(lexer);
@@ -16,7 +17,7 @@ export class GraphQLParser implements QueryParser {
         const visitor = new QueryVisitor();
         const graphQuery =  visitor.visit(program);
         if(!graphQuery) throw new Error("GraphQL Query parsing failed.");
-        logger.debug(`GraphQuery: ${graphQuery.toString()}`);
+        logger.debug(`Parsed in ${Date.now() - startTime}ms. GraphQuery: ${graphQuery.toString()}`);
         return graphQuery;
     }
 
